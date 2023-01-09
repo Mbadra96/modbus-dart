@@ -20,6 +20,7 @@ class ModbusFunctions {
   static const writeMultipleCoils = 0x0f;
   static const writeMultipleRegisters = 0x10;
   static const reportSlaveId = 0x11;
+  static const writeFileRecord = 0x15;
 }
 
 /// MODBUS Connector.
@@ -89,6 +90,9 @@ abstract class ModbusClient {
 
   /// Write multiply registers, function 0x10
   Future<void> writeMultipleRegisters(int address, Uint16List values);
+
+  /// Write File record, function 0x15
+  Future<void> writeFileRecord(int fileNumber, int recordNumber, Uint16List values);
 }
 
 ModbusClient createClient(TcpConnector connector, {int unitId = 1}) =>

@@ -167,9 +167,9 @@ class ModbusClientImpl extends ModbusClient {
             e = ModbusException("Unknown error code: ${errorCode}");
             break;
         }
-        completer!.completeError(e);
+        completer.completeError(e);
       } else {
-        completer!.complete(responseData);
+        completer.complete(responseData);
       }
     });
   }
@@ -329,6 +329,32 @@ class ModbusClientImpl extends ModbusClient {
 
     await executeFunction(ModbusFunctions.writeMultipleRegisters, data);
   }
+
+
+@override
+  Future<void>writeFileRecord(int fileNumber, int recordNumber, Uint16List values) async {
+    int amount = values.length;
+
+    // if (amount < 1 || amount > 123) throw ModbusAmountException();
+
+    int numberOfBytes = amount * 2;
+
+    var data = Uint8List(8 + numberOfBytes);
+    var dataView = ByteData.view(data.buffer)
+      ..setUint8(0, data.length)
+      ..setUint8(1, 0x06) // Reference Type
+      ..setUint16(2,fileNumber)
+      ..setUint16(4, recordNumber)
+      ..setUint16(6, numberOfBytes);
+
+    for (int i = 0; i < amount; i++) {
+      dataView.setUint16(8 + i * 2, values.elementAt(i));
+    }
+
+    await executeFunction(ModbusFunctions.writeFileRecord, data);
+  }
+
+
 }
 class PendingKey {
   int function;
