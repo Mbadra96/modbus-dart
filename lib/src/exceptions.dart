@@ -9,6 +9,9 @@ class ModbusExceptionCodes {
       0x0A; // Gateway Path not Available
   static const gatewayTargetFailedToResponse =
       0x0B; // Target Device Failed to Response
+
+  static const timeout =
+      0xE4; // Timeout error
 }
 
 /// MODBUS Exception Super Class
@@ -17,8 +20,7 @@ class ModbusException implements Exception {
   final String msg;
 
   const ModbusException(this.msg);
-  
-  @override
+
   String toString() => 'MODBUS ERROR: $msg';
 }
 
@@ -69,6 +71,12 @@ class ModbusServerBusyException extends ModbusException {
 class ModbusGatewayProblemException extends ModbusException {
   ModbusGatewayProblemException() : super('Gateway Problem');
 }
+
+
+class ModbusTimeoutException extends ModbusException {
+  ModbusTimeoutException() : super('Timeout Exception');
+}
+
 
 /// Buffer Exception
 /// Throw when buffer is too small for the data to be stored.

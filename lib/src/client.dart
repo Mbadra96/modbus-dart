@@ -8,6 +8,8 @@ import '../modbus.dart';
 import 'exceptions.dart';
 import 'util.dart';
 
+import 'package:convert/convert.dart';
+
 typedef void CompleterCallback(Completer completer, int function, Uint8List data);
 
 /// MODBUS client
@@ -163,6 +165,9 @@ class ModbusClientImpl extends ModbusClient {
           case ModbusExceptionCodes.gatewayTargetFailedToResponse:
             e = ModbusGatewayProblemException();
             break;
+          case ModbusExceptionCodes.timeout:
+            e = ModbusTimeoutException();
+            break;
           default:
             e = ModbusException("Unknown error code: ${errorCode}");
             break;
@@ -195,7 +200,6 @@ class ModbusClientImpl extends ModbusClient {
 
     var response = await executeFunction(function, data);
     var responseView = ByteData.view(response.buffer);
-
     var ret = List<bool?>.filled(amount, null);
     for (int i = 0; i < amount; i++) {
       ret[i] = ((responseView.getUint8(1 /*byte count*/ + (i / 8).truncate()) >>
@@ -341,16 +345,15 @@ class ModbusClientImpl extends ModbusClient {
 
     var data = Uint8List(8 + numberOfBytes);
     var dataView = ByteData.view(data.buffer)
-      ..setUint8(0, data.length)
+      ..setUint8(0, data.length + 1) // add function code byte to request data length
       ..setUint8(1, 0x06) // Reference Type
-      ..setUint16(2,fileNumber)
-      ..setUint16(4, recordNumber)
-      ..setUint16(6, numberOfBytes);
+      ..setUint16(2,fileNumber,Endian.big)
+      ..setUint16(4, recordNumber,Endian.big)
+      ..setUint16(6, amount,Endian.big);
 
     for (int i = 0; i < amount; i++) {
-      dataView.setUint16(8 + i * 2, values.elementAt(i));
+      dataView.setUint16(8 + i * 2, values.elementAt(i), Endian.big);
     }
-
     await executeFunction(ModbusFunctions.writeFileRecord, data);
   }
 
